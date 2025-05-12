@@ -35,6 +35,10 @@ def preprocess_me_image(image: Image.Image):
     image_array = np.expand_dims(image_array, axis=0)  # Add batch dimension
     return image_array
 
+@app.get("/")
+async def root():
+    return {"message": "FastAPI app is running"}
+
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
