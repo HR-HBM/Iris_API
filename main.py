@@ -17,32 +17,46 @@ app.add_middleware(
 )
 
 # Load models
-retinopathy_model = load_model("retinopathy_model.h5")
-edema_model = load_model("edema_model.h5")
+retinopathy_model = load_model("densenet_dr_model.h5")
+edema_model = load_model("MobileNetV2_dme_model.h5")
 
 # Preprocess image (adjust as per your models’ input requirements)
-def preprocess_image(image: Image.Image):
-    image = image.resize((224, 224))  # Example size
+def preprocess_dr_image(image: Image.Image):
+    image = image.resize((512, 512))  # Example size
+    image_array = np.array(image) / 255.0  # Normalize
+    image_array =\
+        np.expand_dims(image_array, axis=0)  # Add batch dimension
+    return image_array
+
+
+def preprocess_me_image(image: Image.Image):
+    image = image.resize((300, 300))  # Example size
     image_array = np.array(image) / 255.0  # Normalize
     image_array = np.expand_dims(image_array, axis=0)  # Add batch dimension
     return image_array
+
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
     # Read and process image
     image_data = await file.read()
     image = Image.open(io.BytesIO(image_data)).convert("RGB")
-    image_array = preprocess_image(image)
+    dr_image_array = preprocess_dr_image(image)
+    me_image_array = preprocess_me_image(image)
+
 
     # Get predictions
-    retinopathy_pred = retinopathy_model.predict(image_array)
-    edema_pred = edema_model.predict(image_array)
+    retinopathy_pred = retinopathy_model.predict(dr_image_array)
+    edema_pred = edema_model.predict(me_image_array)  # Shape: (1, 1), e.g., [[0.7]]
+    edema_result = "DME Positive" if edema_pred[0][0] > 0.5 else "DME Negative"
+    edema_probs = [1 - edema_pred[0][0], edema_pred[0][0]]  # [negative, positive] for consistency
+
 
     # Convert predictions to labels (adjust based on your model output)
     retinopathy_labels = ["ICDR level 0", "ICDR level 1", "ICDR level 2", "ICDR level 3", "ICDR level 4"]
-    edema_labels = ["DME Positive", "DME Negative"]
+    edema_labels = ["DME Negative", "DME Positive"]
     retinopathy_result = retinopathy_labels[np.argmax(retinopathy_pred)]
-    edema_result = edema_labels[np.argmax(edema_pred)]
+    # edema_result = edema_labels[np.argmax(edema_pred)]
 
     return {
         "retinopathy": retinopathy_result,
