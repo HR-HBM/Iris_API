@@ -4,6 +4,8 @@ from tensorflow.keras.models import load_model
 from PIL import Image
 import numpy as np
 import io
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = ""  # Disable GPU to prevent cuFFT/cuDNN/cuBLAS errors
 
 app = FastAPI()
 
@@ -17,9 +19,12 @@ app.add_middleware(
 )
 
 # Load models
-retinopathy_model = load_model("densenet_dr_model.h5")
-edema_model = load_model("MobileNetV2_dme_model.h5")
-
+try:
+    retinopathy_model = load_model("densenet_dr_model.h5")
+    edema_model = load_model("MobileNetV2_dme_model.h5")
+except Exception as e:
+    print(f"Error loading models: {e}")
+    raise
 # Preprocess image (adjust as per your models’ input requirements)
 def preprocess_dr_image(image: Image.Image):
     image = image.resize((512, 512))  # Example size
