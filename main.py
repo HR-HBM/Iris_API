@@ -29,8 +29,7 @@ except Exception as e:
 def preprocess_dr_image(image: Image.Image):
     image = image.resize((512, 512))  # Example size
     image_array = np.array(image) / 255.0  # Normalize
-    image_array =\
-        np.expand_dims(image_array, axis=0)  # Add batch dimension
+    image_array = np.expand_dims(image_array, axis=0)  # Add batch dimension
     return image_array
 
 
@@ -57,7 +56,7 @@ async def predict(file: UploadFile = File(...)):
     # Get predictions
     retinopathy_pred = retinopathy_model.predict(dr_image_array)
     edema_pred = edema_model.predict(me_image_array)  # Shape: (1, 1), e.g., [[0.7]]
-    edema_result = "DME Positive" if edema_pred[0][0] > 0.5 else "DME Negative"
+    edema_result = "Positive" if edema_pred[0][0] > 0.5 else "Negative"
     edema_probs = [1 - edema_pred[0][0], edema_pred[0][0]]  # [negative, positive] for consistency
 
 
