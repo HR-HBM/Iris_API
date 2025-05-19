@@ -20,8 +20,8 @@ app.add_middleware(
 
 # Load models
 try:
-    retinopathy_model = load_model("densenet_dr_model.h5")
-    edema_model = load_model("MobileNetV2_dme_model.h5")
+    retinopathy_model = load_model("rsg_net_V3drModel.h5")
+    edema_model = load_model("MobileNetV3_dme_model.h5")
 except Exception as e:
     print(f"Error loading models: {e}")
     raise
